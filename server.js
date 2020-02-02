@@ -50,7 +50,7 @@ app.get('/', function(req, res) {
         <li class="list-group-item list-group-item-action d-flex align-items-center justify-content-between">
             <span class="item-text">${todo.text}</span>
             <div>
-              <button class="edit-me btn btn-secondary btn-sm mr-1">Edit</button>
+              <button data-id="${todo._id}" class="edit-me btn btn-secondary btn-sm mr-1">Edit</button>
               <button class="delete-me btn btn-danger btn-sm">Delete</button>
             </div>
         </li>`
@@ -75,6 +75,8 @@ app.post('/create-todo', function(req, res) {
 })
 
 app.post('/update-todo', function(req, res) {
-    console.log(req.body.text)
-    res.send("Success!")
+    // Cannot just use req.body.id - must use a special mongodb object id
+    db.collection('todos').findOneAndUpdate({_id: new mongodb.ObjectId(req.body.id)}, {$set: {text: req.body.text}}, function() {
+        res.send("Success!")
+    })
 })
