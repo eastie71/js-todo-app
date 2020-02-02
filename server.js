@@ -4,6 +4,9 @@ let mongodb = require('mongodb')
 let app = express()
 let db
 
+// Allow the 'public' folder access from the browser
+app.use(express.static('public'))
+
 let connectionString = 'mongodb://localhost:27017/TodoApp'
 mongodb.connect(connectionString,{useNewUrlParser: true, useUnifiedTopology: true},function(err, client) {
     db = client.db()
@@ -12,6 +15,9 @@ mongodb.connect(connectionString,{useNewUrlParser: true, useUnifiedTopology: tru
 })
 
 // Boilerplate code
+// Automatically add to body object for asyncronous requests
+app.use(express.json())
+// Automatically take submitted form data and add to body object that lives on request object
 app.use(express.urlencoded({extended: false}))
 
 app.get('/', function(req, res) {
@@ -52,7 +58,9 @@ app.get('/', function(req, res) {
         </ul>
         
       </div>
-      
+      <!-- Using Axios for communicating from browser to node.js (I think you can install node package instead) -->
+      <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+      <script src="/browser.js"></script>
     </body>
     </html>
     `)
@@ -64,4 +72,9 @@ app.post('/create-todo', function(req, res) {
     db.collection('todos').insertOne({text: req.body.todo}, function() {
         res.redirect('/')
     })
+})
+
+app.post('/update-todo', function(req, res) {
+    console.log(req.body.text)
+    res.send("Success!")
 })
