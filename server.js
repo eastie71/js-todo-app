@@ -51,7 +51,7 @@ app.get('/', function(req, res) {
             <span class="item-text">${todo.text}</span>
             <div>
               <button data-id="${todo._id}" class="edit-me btn btn-secondary btn-sm mr-1">Edit</button>
-              <button class="delete-me btn btn-danger btn-sm">Delete</button>
+              <button data-id="${todo._id}" class="delete-me btn btn-danger btn-sm">Delete</button>
             </div>
         </li>`
           }).join('')}
@@ -77,6 +77,13 @@ app.post('/create-todo', function(req, res) {
 app.post('/update-todo', function(req, res) {
     // Cannot just use req.body.id - must use a special mongodb object id
     db.collection('todos').findOneAndUpdate({_id: new mongodb.ObjectId(req.body.id)}, {$set: {text: req.body.text}}, function() {
+        res.send("Success!")
+    })
+})
+
+app.post('/delete-todo', function(req, res) {
+    // Cannot just use req.body.id - must use a special mongodb object id
+    db.collection('todos').deleteOne({_id: new mongodb.ObjectId(req.body.id)}, function() {
         res.send("Success!")
     })
 })
