@@ -1,3 +1,38 @@
+function todoTemplate(todo) {
+    return `
+    <li class="list-group-item list-group-item-action d-flex align-items-center justify-content-between">
+        <span class="item-text">${todo.text}</span>
+        <div>
+          <button data-id="${todo._id}" class="edit-me btn btn-secondary btn-sm mr-1">Edit</button>
+          <button data-id="${todo._id}" class="delete-me btn btn-danger btn-sm">Delete</button>
+        </div>
+    </li>`
+}
+
+// Initial Page Loader for Todo List
+let listHTML = todos.map(function(todo) {
+    return todoTemplate(todo)
+}).join('')
+document.getElementById("todo-list").insertAdjacentHTML("beforeend", listHTML)
+
+// Create Feature
+let createField = document.getElementById("create-field")
+
+document.getElementById("create-form").addEventListener("submit", function(e) {
+    e.preventDefault()
+    // Send request to create todo asyncronously to server to remove from the db
+    // Using axios JS library to perform this operation
+    axios.post('/create-todo', {text: createField.value}).then(function(response) {
+        // after create has completed, then create the HTML required to display new todo
+        document.getElementById("todo-list").insertAdjacentHTML("beforeend", todoTemplate(response.data))
+        // Clear the new todo field, and re-focus on that field ready for next entry
+        createField.value = ''
+        createField.focus()
+    }).catch(function() {
+        console.log("An error occured creating the todo")
+    })
+})
+
 document.addEventListener("click", function(e) {
     if (e.target.classList.contains("delete-me")) {
         // Delete Feature
@@ -8,7 +43,7 @@ document.addEventListener("click", function(e) {
                 // after delete has completed, then remove list item html
                 e.target.parentElement.parentElement.remove()
             }).catch(function() {
-                console.log("An error occured updating the todo")
+                console.log("An error occured deleting the todo")
             })
         }
     } else if (e.target.classList.contains("edit-me")) {

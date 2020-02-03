@@ -33,31 +33,27 @@ app.get('/', function(req, res) {
     </head>
     <body>
       <div class="container">
-        <h1 class="display-4 text-center py-2">To-Do App</h1>
+        <h1 class="display-4 text-center py-2">To-Do List App</h1>
         
         <div class="jumbotron p-3 shadow-md">
-          <form action="/create-todo" method="POST">
+          <form id="create-form" action="/create-todo" method="POST">
             <div class="d-flex align-items-center">
-              <input name="todo" autofocus autocomplete="off" class="form-control mr-3" type="text" style="flex: 1;">
+              <input id="create-field" name="todo" autofocus autocomplete="off" class="form-control mr-3" type="text" style="flex: 1;">
               <button class="btn btn-primary">Add Item</button>
             </div>
           </form>
         </div>
         
-        <ul class="list-group pb-5">
-          ${todos.map(function(todo) {
-            return `
-        <li class="list-group-item list-group-item-action d-flex align-items-center justify-content-between">
-            <span class="item-text">${todo.text}</span>
-            <div>
-              <button data-id="${todo._id}" class="edit-me btn btn-secondary btn-sm mr-1">Edit</button>
-              <button data-id="${todo._id}" class="delete-me btn btn-danger btn-sm">Delete</button>
-            </div>
-        </li>`
-          }).join('')}
+        <ul id="todo-list" class="list-group pb-5">
+            <!-- HTML will come from browser JS code -->
         </ul>
         
       </div>
+
+      <script>
+      let todos = ${JSON.stringify(todos)}
+      </script>
+
       <!-- Using Axios for communicating from browser to node.js (I think you can install node package instead) -->
       <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
       <script src="/browser.js"></script>
@@ -69,8 +65,9 @@ app.get('/', function(req, res) {
 })
 
 app.post('/create-todo', function(req, res) {
-    db.collection('todos').insertOne({text: req.body.todo}, function() {
-        res.redirect('/')
+    db.collection('todos').insertOne({text: req.body.text}, function(err, info) {
+        // "info.ops[0]" is array associated with newly inserted data
+        res.json(info.ops[0])
     })
 })
 
