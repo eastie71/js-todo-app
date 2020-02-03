@@ -1,5 +1,6 @@
 let express = require('express')
 let mongodb = require('mongodb')
+let sanitizeHtml = require('sanitize-html')
 
 let app = express()
 let db
@@ -20,6 +21,22 @@ app.use(express.json())
 // Automatically take submitted form data and add to body object that lives on request object
 app.use(express.urlencoded({extended: false}))
 
+function passwordProtected(req, res, next) {
+    res.set('WWW-Authenticate', 'Basic realm="Simple Todo List App"')
+    console.log(req.headers.authorization)
+    if (req.headers.authorization == "Basic dGVzdDp0ZXN0MTIz") {
+        // Need to call "next()" to signal express to continue
+        next()
+    } else {
+        // User Cancels Login
+        res.status(401).send("Authentication required")
+    }
+}
+
+// This will force the calling of passwordProtected function for ALL routes below
+app.use(passwordProtected)
+
+// passwordProtected function is called first, and then the anonymous function
 app.get('/', function(req, res) {
     db.collection('todos').find().toArray(function(err, todos) {
         res.send(`
@@ -65,15 +82,20 @@ app.get('/', function(req, res) {
 })
 
 app.post('/create-todo', function(req, res) {
-    db.collection('todos').insertOne({text: req.body.text}, function(err, info) {
+    // Do not allow any todo text with HTML tags or attributes
+    let safeText = sanitizeHtml(req.body.text, {allowedTags: [], allowedAttributes: {}})
+
+    db.collection('todos').insertOne({text: safeText}, function(err, info) {
         // "info.ops[0]" is array associated with newly inserted data
         res.json(info.ops[0])
     })
 })
 
 app.post('/update-todo', function(req, res) {
+    // Do not allow any todo text with HTML tags or attributes
+    let safeText = sanitizeHtml(req.body.text, {allowedTags: [], allowedAttributes: {}})
     // Cannot just use req.body.id - must use a special mongodb object id
-    db.collection('todos').findOneAndUpdate({_id: new mongodb.ObjectId(req.body.id)}, {$set: {text: req.body.text}}, function() {
+    db.collection('todos').findOneAndUpdate({_id: new mongodb.ObjectId(req.body.id)}, {$set: {text: safeText}}, function() {
         res.send("Success!")
     })
 })
