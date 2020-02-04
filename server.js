@@ -5,6 +5,12 @@ let sanitizeHtml = require('sanitize-html')
 let app = express()
 let db
 
+// Setup port - based on environment OR if local it is 3000
+let port = process.env.PORT
+if (port == null || port == "") {
+    port = 3000
+}
+
 // Allow the 'public' folder access from the browser
 app.use(express.static('public'))
 
@@ -12,7 +18,7 @@ let connectionString = 'mongodb://localhost:27017/TodoApp'
 mongodb.connect(connectionString,{useNewUrlParser: true, useUnifiedTopology: true},function(err, client) {
     db = client.db()
     // Dont start listening for requests (on port 3000) until db has established its connection
-    app.listen(3000)
+    app.listen(port)
 })
 
 // Boilerplate code
