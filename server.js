@@ -15,6 +15,9 @@ if (port == null || port == "") {
 app.use(express.static('public'))
 
 let connectionString = 'mongodb://localhost:27017/TodoApp'
+if (process.env.NODE_ENV != "development") {
+    connectionString = 'mongodb+srv://todoapp:craig123@cluster0-jyrjz.mongodb.net/TodoApp?retryWrites=true&w=majority'
+}
 mongodb.connect(connectionString,{useNewUrlParser: true, useUnifiedTopology: true},function(err, client) {
     db = client.db()
     // Dont start listening for requests (on port 3000) until db has established its connection
@@ -29,7 +32,6 @@ app.use(express.urlencoded({extended: false}))
 
 function passwordProtected(req, res, next) {
     res.set('WWW-Authenticate', 'Basic realm="Simple Todo List App"')
-    console.log(req.headers.authorization)
     if (req.headers.authorization == "Basic dGVzdDp0ZXN0MTIz") {
         // Need to call "next()" to signal express to continue
         next()
