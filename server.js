@@ -4,6 +4,17 @@ let sanitizeHtml = require('sanitize-html')
 
 let app = express()
 let db
+let db_name
+
+// Mongo DB connection strings
+let local_db 
+if (process.env.NODE_ENV == "development") {
+    local_db = 'mongodb://localhost:27017/TodoApp'
+} else {
+    local_db = 'heroku placeholder'
+}
+let external_db = 'mongodb+srv://todoapp:craig123@cluster0-jyrjz.mongodb.net/TodoApp?retryWrites=true&w=majority'
+
 
 // Setup port - based on environment OR if local it is 3000
 let port = process.env.PORT
@@ -14,15 +25,24 @@ if (port == null || port == "") {
 // Allow the 'public' folder access from the browser
 app.use(express.static('public'))
 
-let connectionString = 'mongodb://localhost:27017/TodoApp'
-if (process.env.NODE_ENV != "development") {
-    connectionString = 'mongodb+srv://todoapp:craig123@cluster0-jyrjz.mongodb.net/TodoApp?retryWrites=true&w=majority'
+function dbConnect(connectString) {
+    mongodb.connect(connectString,{useNewUrlParser: true, useUnifiedTopology: true},function(err, client) {
+        db = client.db()
+    })
 }
-mongodb.connect(connectionString,{useNewUrlParser: true, useUnifiedTopology: true},function(err, client) {
-    db = client.db()
+
+// Setup the initial database connection
+if (db == null) {
+    let connectionString = local_db
+    db_name = "LOCAL"
+    if (process.env.NODE_ENV != "development") {
+        connectionString = external_db
+        db_name = "ATLAS"
+    }
+    dbConnect(connectionString)
     // Dont start listening for requests (on port 3000) until db has established its connection
     app.listen(port)
-})
+}
 
 // Boilerplate code
 // Automatically add to body object for asyncronous requests
@@ -58,13 +78,21 @@ app.get('/', function(req, res) {
     </head>
     <body>
       <div class="container">
-        <h1 class="display-4 text-center py-2">To-Do List App</h1>
-        
+        <h1 id="todo-header" class="display-4 text-center py-2">
+            <!-- HTML will come from browser JS code -->
+        </h1>
+        <form id="switch-db-form" action="/switch-db" method="POST">
+            <div class="form-row text-center">
+                <div class="col-12 pb-3">
+                    <button class="btn btn-info">Switch Database</button>
+                </div>
+            </div>
+        </form>
         <div class="jumbotron p-3 shadow-md">
           <form id="create-form" action="/create-todo" method="POST">
             <div class="d-flex align-items-center">
               <input id="create-field" name="todo" autofocus autocomplete="off" class="form-control mr-3" type="text" style="flex: 1;">
-              <button class="btn btn-primary">Add Item</button>
+              <button class="btn btn-primary">Add To-Do</button>
             </div>
           </form>
         </div>
@@ -77,6 +105,7 @@ app.get('/', function(req, res) {
 
       <script>
       let todos = ${JSON.stringify(todos)}
+      let db_name = "${db_name}"
       </script>
 
       <!-- Using Axios for communicating from browser to node.js (I think you can install node package instead) -->
@@ -85,6 +114,46 @@ app.get('/', function(req, res) {
     </body>
     </html>
     `)
+    })
+    
+})
+
+app.post('/switch-db', function(req, res) {
+    let connectionString
+    if (db_name == "LOCAL") {
+        db_name = "ATLAS"
+        connectionString = external_db
+    } else {
+        db_name = "LOCAL"
+        connectionString = local_db
+    }
+
+    //
+    // I don't understand why the code below does not work??
+    //
+    // dbConnect(connectionString)
+    // console.log(db_name)
+    // db.collection('todos').find().toArray(function(err, todos) {
+    //     console.log(todos)
+    //     res.send(todos)
+    // })
+    //
+    // Replaced with local code below that does the SAME thing!
+    //
+    mongodb.connect(connectionString,{useNewUrlParser: true, useUnifiedTopology: true},function(err, client) {
+        if (err) {
+            console.log(err)
+        } else {
+            let result = []
+            db = client.db()
+            db.collection('todos').find().toArray(function(err, todos) {
+                console.log(todos)
+                result[0] = todos
+                result[1] = db_name
+                res.send(result)
+            })
+            console.log(db_name)
+        }
     })
     
 })

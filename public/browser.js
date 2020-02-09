@@ -9,18 +9,41 @@ function todoTemplate(todo) {
     </li>`
 }
 
+function setupTodoList(todo_list, list_name) {
+    // Setup the ToDo List Page Heading
+    document.getElementById("todo-header").innerHTML = list_name + " To-Do List"
+    // Setup the List of Todos
+    document.getElementById("todo-list").innerHTML = ""
+    let listHTML = todo_list.map(function(todo) {
+        return todoTemplate(todo)
+    }).join('')
+    document.getElementById("todo-list").insertAdjacentHTML("beforeend", listHTML)
+}
+
 // Initial Page Loader for Todo List
-let listHTML = todos.map(function(todo) {
-    return todoTemplate(todo)
-}).join('')
-document.getElementById("todo-list").insertAdjacentHTML("beforeend", listHTML)
+setupTodoList(todos, db_name)
+
+// Switch Database feature
+document.getElementById("switch-db-form").addEventListener("submit", function(e) {
+    e.preventDefault()
+    // Send request to switch database asyncronously to server to switch the db used
+    // Using axios JS library to perform this operation
+    axios.post('/switch-db').then(function(response) {
+        // after switch db has completed, then need to redisplay the header and the list of todos
+        console.log("Switched DB OK")
+        console.log(response.data)
+        setupTodoList(response.data[0], response.data[1])
+    }).catch(function() {
+        console.log("An error occured switching the database")
+    })
+})
 
 // Create Feature
 let createField = document.getElementById("create-field")
 
 document.getElementById("create-form").addEventListener("submit", function(e) {
     e.preventDefault()
-    // Send request to create todo asyncronously to server to remove from the db
+    // Send request to create todo asyncronously to server to create todo in the db
     // Using axios JS library to perform this operation
     axios.post('/create-todo', {text: createField.value}).then(function(response) {
         // after create has completed, then create the HTML required to display new todo
