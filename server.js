@@ -11,7 +11,7 @@ let local_db
 if (process.env.NODE_ENV == "development") {
     local_db = 'mongodb://localhost:27017/TodoApp'
 } else {
-    local_db = 'heroku placeholder'
+    local_db = process.env.MONGODB_URI
 }
 let external_db = 'mongodb+srv://todoapp:craig123@cluster0-jyrjz.mongodb.net/TodoApp?retryWrites=true&w=majority'
 
