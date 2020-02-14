@@ -21,7 +21,7 @@ function setupTodoList(todo_list, list_name) {
 }
 
 // Initial Page Loader for Todo List
-setupTodoList(todos, db_name)
+setupTodoList(todos, current_db_name)
 
 // Switch Database feature
 document.getElementById("switch-db-form").addEventListener("submit", function(e) {
