@@ -67,7 +67,7 @@ function passwordProtected(req, res, next) {
 
 function setupTodoList(dbase, res) {
     dbase.collection('todos').find().toArray(function(err, todos) {
-        console.log(current_db_name)
+        console.log(todos)
         res.send(`
 <!DOCTYPE html>
 <html>
@@ -89,7 +89,7 @@ function setupTodoList(dbase, res) {
             </div>
         </div>
     </form>
-    <div class="jumbotron p-3 shadow-md">
+    <div class="jumbotron p-4 shadow-md">
       <form id="create-form" action="/create-todo" method="POST">
         <div class="d-flex align-items-center">
           <input id="create-field" name="todo" autofocus autocomplete="off" class="form-control mr-3" type="text" style="flex: 1;">
@@ -157,15 +157,20 @@ app.post('/create-todo', function(req, res) {
     let safeText = sanitizeHtml(req.body.text, {allowedTags: [], allowedAttributes: {}})
 
     if (current_db_name == "LOCAL") {
-        db_local.collection('todos').insertOne({text: safeText}, function(err, info) {
-            // "info.ops[0]" is array associated with newly inserted data
-            res.json(info.ops[0])
-        })
+        setTimeout(function() {
+            db_local.collection('todos').insertOne({text: safeText}, function(err, info) {
+                // "info.ops[0]" is array associated with newly inserted data
+                res.json(info.ops[0])
+            })
+        }, 10000)
+        
     } else {
-        db_external.collection('todos').insertOne({text: safeText}, function(err, info) {
-            // "info.ops[0]" is array associated with newly inserted data
-            res.json(info.ops[0])
-        })
+        setTimeout(function() {
+            db_external.collection('todos').insertOne({text: safeText}, function(err, info) {
+                // "info.ops[0]" is array associated with newly inserted data
+                res.json(info.ops[0])
+            })
+        }, 10000)
     }   
 })
 
