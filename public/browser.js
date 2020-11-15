@@ -24,19 +24,21 @@ function setupTodoList(todo_list, list_name) {
 setupTodoList(todos, current_db_name)
 
 // Switch Database feature
-document.getElementById("switch-db-form").addEventListener("submit", function(e) {
-    e.preventDefault()
-    // Send request to switch database asyncronously to server to switch the db used
-    // Using axios JS library to perform this operation
-    axios.post('/switch-db').then(function(response) {
-        // after switch db has completed, then need to redisplay the header and the list of todos
-        console.log("Switched DB OK")
-        console.log(response.data)
-        setupTodoList(response.data[0], response.data[1])
-    }).catch(function() {
-        console.log("An error occured switching the database")
+if (document.getElementById("switch-db-form")) {
+    document.getElementById("switch-db-form").addEventListener("submit", function(e) {
+        e.preventDefault()
+        // Send request to switch database asyncronously to server to switch the db used
+        // Using axios JS library to perform this operation
+        axios.post('/switch-db').then(function(response) {
+            // after switch db has completed, then need to redisplay the header and the list of todos
+            console.log("Switched DB OK")
+            console.log(response.data)
+            setupTodoList(response.data[0], response.data[1])
+        }).catch(function() {
+            console.log("An error occured switching the database")
+        })
     })
-})
+}
 
 // Create Feature
 let createField = document.getElementById("create-field")
