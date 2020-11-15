@@ -28,9 +28,11 @@ app.use(express.static('public'))
 
 function dbConnect(localString, externalString) {
     console.log("Connect dbases")
-    mongodb.connect(localString,{useNewUrlParser: true, useUnifiedTopology: true},function(err, client) {
-        db_local = client.db()
-    })
+    if (localString) {
+        mongodb.connect(localString,{useNewUrlParser: true, useUnifiedTopology: true},function(err, client) {
+            db_local = client.db()
+        })
+    }
     mongodb.connect(externalString,{useNewUrlParser: true, useUnifiedTopology: true},function(err, client) {
         db_external = client.db()
     })
@@ -66,6 +68,18 @@ function passwordProtected(req, res, next) {
 }
 
 function setupTodoList(dbase, res) {
+    let switchDB = ``
+    if (process.env.NODE_ENV == "development") {
+        switchDB = `
+            <form id="switch-db-form" action="/switch-db" method="POST">
+                <div class="form-row text-center">
+                    <div class="col-12 pb-3">
+                        <button class="btn btn-info">Switch Database</button>
+                    </div>
+                </div>
+            </form>
+        `
+    }
     dbase.collection('todos').find().toArray(function(err, todos) {
         console.log(current_db_name)
         res.send(`
@@ -82,13 +96,7 @@ function setupTodoList(dbase, res) {
     <h1 id="todo-header" class="display-4 text-center py-2">
         <!-- HTML will come from browser JS code -->
     </h1>
-    <form id="switch-db-form" action="/switch-db" method="POST">
-        <div class="form-row text-center">
-            <div class="col-12 pb-3">
-                <button class="btn btn-info">Switch Database</button>
-            </div>
-        </div>
-    </form>
+    ${switchDB} 
     <div class="jumbotron p-3 shadow-md">
       <form id="create-form" action="/create-todo" method="POST">
         <div class="d-flex align-items-center">
@@ -132,22 +140,24 @@ app.get('/', function(req, res) {
 
 app.post('/switch-db', function(req, res) {
     let result = []
-    if (current_db_name == "LOCAL") {
-        current_db_name = "ATLAS"
-        db_external.collection('todos').find().toArray(function(err, todos) {
-            console.log(todos)
-            result[0] = todos
-            result[1] = current_db_name
-            res.send(result)
-        })
-    } else {
-        current_db_name = "LOCAL"
-        db_local.collection('todos').find().toArray(function(err, todos) {
-            console.log(todos)
-            result[0] = todos
-            result[1] = current_db_name
-            res.send(result)
-        })
+    if (process.env.NODE_ENV == "development") {
+        if (current_db_name == "LOCAL") {
+            current_db_name = "ATLAS"
+            db_external.collection('todos').find().toArray(function(err, todos) {
+                console.log(todos)
+                result[0] = todos
+                result[1] = current_db_name
+                res.send(result)
+            })
+        } else {
+            current_db_name = "LOCAL"
+            db_local.collection('todos').find().toArray(function(err, todos) {
+                console.log(todos)
+                result[0] = todos
+                result[1] = current_db_name
+                res.send(result)
+            })
+        }
     }
     console.log(current_db_name)
 })
